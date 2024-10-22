@@ -223,6 +223,18 @@ bats_lmtp_test_override_fallback "SimpleIMAPRetriever 143"
 fi
 }
 
+bats_lmtp_test_py() {
+  run d_lmtp_test_py "$@"
+  run d_retrieve
+  assert_success
+}
+
+@test "MTA_smtp" {
+if head `which getmail` | grep 'python3' ; then
+bats_smtp_test_py "SimpleIMAPRetriever 143"
+fi
+}
+
 bats_imap_search() {
   run d_imap_search "$@"
   bats_check_mail

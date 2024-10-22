@@ -623,6 +623,41 @@ d_lmtp_test_override_fallback() {
 d_docker "lmtp_test_override_fallback $@"
 }
 
+smtp_test_py() {
+  RETRIEVER=$1
+  PORT=$2
+  testmail
+  mail_clean
+  cat > /home/getmail/getmail <<EOF
+[retriever]
+type = ${RETRIEVER}
+server = localhost
+username = $TESTEMAIL
+port = $PORT
+password = $PSS
+[destination]
+type = MTA_smtp
+host = 127.0.0.1
+port = 23218
+[options]
+read_all = True
+delete = True
+EOF
+  cat > /home/getmail/smtpd.py <<EOF
+from smtpd import SMTPServer
+import asyncore
+class SMTPTestServer(SMTPServer):
+  def process_message(self, peer, mailfrom, rcpttos, data, **kwargs):
+    return
+server = SMTPTestServer(('localhost', 23218), None)
+asyncore.loop()
+EOF
+  python3 /home/getmail/smtpd.py &
+}
+d_lmtp_test_py() {
+d_docker "smtp_test_py $@"
+}
+
 imap_search() {
   DELETE=$2
   RETRIEVER=IMAPSSL
